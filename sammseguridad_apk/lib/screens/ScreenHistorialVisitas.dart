@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sammseguridad_apk/provider/Mainprovider.dart';
+import 'package:sammseguridad_apk/provider/mainprovider.dart';
 import 'package:sammseguridad_apk/services/ApiService.dart';
 import 'package:sammseguridad_apk/widgets/Appbar.dart';
 import 'package:sammseguridad_apk/widgets/Drawer.dart';
@@ -51,47 +51,46 @@ class _ScreenHistorialVisitasState extends State<ScreenHistorialVisitas> {
   }
 
   Widget _buildTable(List<Map<String, dynamic>> visitas) {
-  return LayoutBuilder(
-    builder: (BuildContext context, BoxConstraints constraints) {
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columnSpacing: 16.0,
-          headingTextStyle: TextStyle(
-              color: Theme.of(context).primaryColor,
-              fontSize: 14,
-              fontWeight: FontWeight.bold),
-          dataTextStyle: TextStyle(
-              color: Theme.of(context).colorScheme.secondary,
-              fontSize: 14), // Cambio aquí
-          columns: const <DataColumn>[
-            DataColumn(label: Text('Codigo')),
-            DataColumn(label: Text('Descripcion')),
-            DataColumn(label: Text('Duracion')),
-            DataColumn(label: Text('Estado')),
-            DataColumn(label: Text('FechaCrea')),
-            DataColumn(label: Text('FechaVisita')),
-            DataColumn(label: Text('Hora')),
-            DataColumn(label: Text('Placa')),
-          ],
-          rows: visitas.map((visita) {
-            return DataRow(cells: <DataCell>[
-              DataCell(Text(visita['Codigo']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['Descripcion']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['Duracion']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['Estado']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['FechaCrea']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['FechaVisita']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['Hora']?.toString() ?? 'N/A')),
-              DataCell(Text(visita['Placa']?.toString() ?? 'N/A')),
-            ]);
-          }).toList(),
-        ),
-      );
-    },
-  );
-}
-
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 16.0,
+            headingTextStyle: TextStyle(
+                color: Theme.of(context).primaryColor,
+                fontSize: 14,
+                fontWeight: FontWeight.bold),
+            dataTextStyle: TextStyle(
+                color: Theme.of(context).colorScheme.secondary,
+                fontSize: 14), // Cambio aquí
+            columns: const <DataColumn>[
+              DataColumn(label: Text('Codigo')),
+              DataColumn(label: Text('Descripcion')),
+              DataColumn(label: Text('Duracion')),
+              DataColumn(label: Text('Estado')),
+              DataColumn(label: Text('FechaCrea')),
+              DataColumn(label: Text('FechaVisita')),
+              DataColumn(label: Text('Hora')),
+              DataColumn(label: Text('Placa')),
+            ],
+            rows: visitas.map((visita) {
+              return DataRow(cells: <DataCell>[
+                DataCell(Text(visita['Codigo']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['Descripcion']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['Duracion']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['Estado']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['FechaCrea']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['FechaVisita']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['Hora']?.toString() ?? 'N/A')),
+                DataCell(Text(visita['Placa']?.toString() ?? 'N/A')),
+              ]);
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

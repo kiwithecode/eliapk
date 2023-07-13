@@ -4,32 +4,30 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  final String _baseUrl =  'http://10.0.2.2:5000'; //ip para emulador
+  final String _baseUrl = 'http://198.38.89.240:8035'; //ip para emulador
   //ip para tlf http://10.0.2.2:5000
 
   String getServiceUrl(String serviceUrl) {
     return "$_baseUrl/$serviceUrl";
   }
 
- Future<List<dynamic>> getData(String endpoint, String jwtToken) async {
-  var url = Uri.parse(_baseUrl + endpoint);
-  http.Response response = await http.get(
-    url,
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer $jwtToken",
-    },
-  );
+  Future<dynamic> getData(String endpoint, String jwtToken) async {
+    var url = Uri.parse(_baseUrl + endpoint);
+    http.Response response = await http.get(
+      url,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer $jwtToken",
+      },
+    );
 
-  if (response.statusCode == 200) {
-    log(response.body.toString());
-   
-    return jsonDecode(response.body);
-  } else {
-    throw Exception('Failed to load data');
+    if (response.statusCode == 200) {
+      log(response.body.toString());
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load data');
+    }
   }
-}
-
 
   Future<String> getDataJson(String endpoint, String jwtToken) async {
     var url = Uri.parse(_baseUrl + endpoint);

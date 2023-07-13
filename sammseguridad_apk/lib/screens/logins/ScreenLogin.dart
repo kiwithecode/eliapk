@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sammseguridad_apk/provider/Mainprovider.dart';
+import 'package:sammseguridad_apk/provider/mainprovider.dart';
 import 'package:sammseguridad_apk/screens/ScreanMenu.dart';
 import 'package:sammseguridad_apk/services/ApiService.dart';
 
@@ -98,6 +98,7 @@ class _LoginPageState extends State<LoginPage> {
       _mainProvider.updateToken(token);
     });
   }
+
   Future<void> postData(
       String endpoint, Map<String, dynamic> data, String jwtToken) async {
     try {
@@ -111,29 +112,28 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-    Future<void> login(String Codigo, String Clave) async {
-      try {
-        await postData('/login/login', {'Codigo': Codigo, 'Clave': Clave}, '');
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ScreanMenu()),
-        );
-      } catch (e) {
-        showCustomSnackBar(context, 'Error al iniciar sesión: $e', Colors.red);
-        _usernameController.clear();
-        _passwordController.clear();
-      }
-    }
-
-    void showCustomSnackBar(BuildContext context, String message, Color color) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: color,
-        ),
+  Future<void> login(String Codigo, String Clave) async {
+    try {
+      await postData('/login/login', {'Codigo': Codigo, 'Clave': Clave}, '');
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ScreanMenu()),
       );
+    } catch (e) {
+      showCustomSnackBar(context, 'Error al iniciar sesión: $e', Colors.red);
+      _usernameController.clear();
+      _passwordController.clear();
     }
+  }
+
+  void showCustomSnackBar(BuildContext context, String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +149,8 @@ class _LoginPageState extends State<LoginPage> {
                 children: <Widget>[
                   const SizedBox(height: 3 * _sizedBoxHeight),
                   _buildTextField('Usuario', _usernameController),
-                  _buildTextField('Contraseña', _passwordController, isObscured: true),
+                  _buildTextField('Contraseña', _passwordController,
+                      isObscured: true),
                   Row(
                     children: [
                       TextButton(
@@ -171,10 +172,13 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           try {
-                            await login(_usernameController.text, _passwordController.text);
-                            showCustomSnackBar(context, 'Inicio de sesión exitoso!', Colors.green);
+                            await login(_usernameController.text,
+                                _passwordController.text);
+                            showCustomSnackBar(context,
+                                'Inicio de sesión exitoso!', Colors.green);
                           } catch (e) {
-                            showCustomSnackBar(context, 'Error al iniciar sesión: $e', Colors.red);
+                            showCustomSnackBar(context,
+                                'Error al iniciar sesión: $e', Colors.red);
                           }
                         }
                       },
@@ -209,7 +213,8 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 80),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 20, horizontal: 80),
                         primary: Colors.white,
                         shape: RoundedRectangleBorder(
                           side: BorderSide(color: Color(0xFF0040AE), width: 2),

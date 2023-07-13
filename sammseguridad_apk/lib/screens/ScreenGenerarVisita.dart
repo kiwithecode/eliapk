@@ -11,7 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/services.dart';
-import 'package:sammseguridad_apk/provider/Mainprovider.dart';
+import 'package:sammseguridad_apk/provider/mainprovider.dart';
 import 'package:sammseguridad_apk/widgets/Appbar.dart';
 import 'package:sammseguridad_apk/widgets/Drawer.dart';
 
@@ -53,25 +53,26 @@ class _ScreenGenerarVisitaState extends State<ScreenGenerarVisita> {
       SnackBar(content: Text('QR data copied to clipboard')),
     );
   }
+
   GlobalKey _qrKey = GlobalKey();
 
   Future<void> _downloadQRCode(GlobalKey qrKey) async {
-  RenderRepaintBoundary boundary = qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-  var image = await boundary.toImage();
-  ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
-  Uint8List pngBytes = byteData!.buffer.asUint8List();
+    RenderRepaintBoundary boundary =
+        qrKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    var image = await boundary.toImage();
+    ByteData? byteData = await image.toByteData(format: ImageByteFormat.png);
+    Uint8List pngBytes = byteData!.buffer.asUint8List();
 
-  // Guarda la imagen en el directorio temporal del dispositivo
-  final directory = await getTemporaryDirectory();
-  final imagePath = '${directory.path}/qr_code.png';
-  File imageFile = File(imagePath);
-  await imageFile.writeAsBytes(pngBytes);
+    // Guarda la imagen en el directorio temporal del dispositivo
+    final directory = await getTemporaryDirectory();
+    final imagePath = '${directory.path}/qr_code.png';
+    File imageFile = File(imagePath);
+    await imageFile.writeAsBytes(pngBytes);
 
-  // Guarda la imagen en la galería
-  final result = await GallerySaver.saveImage(imageFile.path);
-  print(result);
-}
-
+    // Guarda la imagen en la galería
+    final result = await GallerySaver.saveImage(imageFile.path);
+    print(result);
+  }
 
   void _sendQRCodeByEmail(String qrData) {
     // TODO: Implement send by email functionality
