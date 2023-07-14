@@ -6,6 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:ui' as ui;
 import 'package:flutter/services.dart';
 import 'package:flutter/painting.dart';
+import 'CrearRondaForm.dart';
 
 class PageGPS extends StatefulWidget {
   @override
@@ -16,7 +17,6 @@ class _PageGPSState extends State<PageGPS> {
   GoogleMapController? mapController;
   final LatLng _center = const LatLng(-2.1480022, -79.8860091);
   final Set<Marker> _markers = {};
-
   BitmapDescriptor? markerIcon;
 
   @override
@@ -26,45 +26,54 @@ class _PageGPSState extends State<PageGPS> {
   }
 
   void setMarkerIcon() async {
-  final ImageConfiguration imageConfiguration = ImageConfiguration();
-  final ByteData byteData = await rootBundle.load('assets/images/SAMM.png');
-  final ui.Codec codec = await ui.instantiateImageCodec(
-    byteData.buffer.asUint8List(),
-    targetWidth: 120,  // Change the width to your need
-    targetHeight: 120, // Change the height to your need
-  );
-  final ui.FrameInfo frameInfo = await codec.getNextFrame();
-  final ui.Image resizedImage = frameInfo.image;
-  
-  // Convert ui.Image to bytes
-  final ByteData? imageData = await resizedImage.toByteData(format: ui.ImageByteFormat.png);
-  final Uint8List bytes = imageData!.buffer.asUint8List();
+    final ImageConfiguration imageConfiguration = ImageConfiguration();
+    final ByteData byteData = await rootBundle.load('assets/images/SAMM.png');
+    final ui.Codec codec = await ui.instantiateImageCodec(
+      byteData.buffer.asUint8List(),
+      targetWidth: 120,
+      targetHeight: 120,
+    );
+    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+    final ui.Image resizedImage = frameInfo.image;
 
-  markerIcon = BitmapDescriptor.fromBytes(bytes);
-}
+    final ByteData? imageData = await resizedImage.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List bytes = imageData!.buffer.asUint8List();
 
+    markerIcon = BitmapDescriptor.fromBytes(bytes);
+  }
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
   }
 
-
-  void _addMarker(LatLng position) {
-  setState(() {
-    _markers.add(
-      Marker(
-        markerId: MarkerId(DateTime.now().toString()), // Unique id for each marker
-        position: position,
-        infoWindow: InfoWindow(
-          title: 'New marker',
-          snippet: 'This marker was added when you clicked the map',
-        ),
-        icon: markerIcon ?? BitmapDescriptor.defaultMarker, // Provide default marker if markerIcon is null
+  void _onMapTapped(LatLng position) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CrearRondaForm(position: position),
       ),
     );
-  });
-}
 
+    if (result != null) {
+      _addMarker(position, result);
+    }
+  }
+
+  void _addMarker(LatLng position, Map<String, String> formData) {
+    setState(() {
+      _markers.add(
+        Marker(
+          markerId: MarkerId(DateTime.now().toString()),
+          position: position,
+          infoWindow: InfoWindow(
+            title: formData['codigo'],
+            snippet: formData['descripcion'],
+          ),
+          icon: markerIcon ?? BitmapDescriptor.defaultMarker,
+        ),
+      );
+    });
+  }
 
   void _removeMarker() {
     setState(() {
@@ -117,7 +126,7 @@ class _PageGPSState extends State<PageGPS> {
                           zoom: 11.0,
                         ),
                         scrollGesturesEnabled: true,
-                        onTap: _addMarker,
+                        onTap: _onMapTapped,
                       ),
                     ),
                   ),
@@ -130,7 +139,6 @@ class _PageGPSState extends State<PageGPS> {
               ),
             ),
           ),
-         
         ],
       ),
     );

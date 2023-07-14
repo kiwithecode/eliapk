@@ -4,7 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  final String _baseUrl = 'http://198.38.89.240:8035'; //ip para emulador
+  final String _baseUrl = 'http://10.0.2.2:5000'; //ip para emulador
+  //198.38.89.240:8035
   //ip para tlf http://10.0.2.2:5000
 
   String getServiceUrl(String serviceUrl) {
