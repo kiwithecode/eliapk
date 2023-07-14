@@ -7,6 +7,7 @@ import 'package:sammseguridad_apk/page/QRView%20.dart';
 import 'package:sammseguridad_apk/screens/ScreanMenu.dart';
 import 'package:sammseguridad_apk/screens/ScreenGenerarVisita.dart';
 import 'package:sammseguridad_apk/screens/ScreenHistorialVisitas.dart';
+import 'package:sammseguridad_apk/screens/ScreenHistorialRondas.dart';
 import 'package:sammseguridad_apk/screens/ScreenRondas.dart';
 
 const kDrawerHeaderColor = Color(0xFF0040AE);
@@ -114,19 +115,19 @@ class CustomDrawer extends StatelessWidget {
           //     );
           //   },
           // ),
-           ListTile(
+          ListTile(
             leading: const Icon(Icons.shield, color: kDrawerHeaderColor),
-             title: Text('Información Seguridad', style: kListTileTextStyle),
-             onTap: () {
-               Navigator.of(context).push(
-                 MaterialPageRoute(
-                   builder: (context) => PageInfoUrbaSeguridad(),
+            title: Text('Información Seguridad', style: kListTileTextStyle),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => PageInfoUrbaSeguridad(),
                 ),
               );
             },
-           ),
-           ListTile(
-            leading: const Icon(Icons.local_police,color: kDrawerHeaderColor),
+          ),
+          ListTile(
+            leading: const Icon(Icons.local_police, color: kDrawerHeaderColor),
             title: Text('Rondas', style: kListTileTextStyle),
             onTap: () {
               Navigator.of(context).push(
@@ -137,18 +138,19 @@ class CustomDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.work_history,color: kDrawerHeaderColor),
+            leading: const Icon(Icons.work_history, color: kDrawerHeaderColor),
             title: Text('Historial de Rondas', style: kListTileTextStyle),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => ScreenRondas(),
+                  builder: (context) => ScreenHistorialRondas(),
                 ),
               );
             },
           ),
-              ListTile(
-            leading: const Icon(Icons.qr_code_scanner,color: kDrawerHeaderColor),
+          ListTile(
+            leading:
+                const Icon(Icons.qr_code_scanner, color: kDrawerHeaderColor),
             title: Text('Scannear Qr', style: kListTileTextStyle),
             onTap: () {
               Navigator.of(context).push(

@@ -1,12 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:sammseguridad_apk/services/ApiService.dart';
-import 'package:sammseguridad_apk/provider/mainprovider.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:geocoding/geocoding.dart';
 
 class CrearRondaForm extends StatefulWidget {
   final LatLng position;
@@ -19,66 +15,76 @@ class CrearRondaForm extends StatefulWidget {
 
 class _CrearRondaFormState extends State<CrearRondaForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _idRondaController = TextEditingController();
-  XFile? _imageFile;
-
-  String token = "";
-  late MainProvider _mainProvider;
-  late Future<void> _initToken;
+  final TextEditingController _observacionesController =
+      TextEditingController();
+  final TextEditingController _estadoController = TextEditingController();
+  final TextEditingController _direccionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _mainProvider = Provider.of<MainProvider>(context, listen: false);
-    _initToken = _initializeToken();
+    _setInitialAddress();
   }
 
-  Future<void> _initializeToken() async {
-    final tokenFromPrefs = await _mainProvider.getPreferencesToken();
-    token = tokenFromPrefs.toString();
-    _mainProvider.updateToken(token);
+  Future<void> _setInitialAddress() async {
+    try {
+      final placemarks = await placemarkFromCoordinates(
+        widget.position.latitude,
+        widget.position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+
+        setState(() {
+          _direccionController.text = [
+            place.street,
+            place.subLocality,
+            place.locality,
+            place.administrativeArea,
+            place.country,
+          ].join(', ');
+        });
+      }
+    } on Exception {
+      // Handle exception
+    }
   }
 
   Future<void> _saveForm() async {
     if (_formKey.currentState!.validate()) {
+      // Get ApiService from the provider
       final apiService = Provider.of<ApiService>(context, listen: false);
 
-      final imageBytes = await rootBundle.load(_imageFile!.path);
-      final base64Image = base64Encode(imageBytes.buffer.asUint8List());
-
       final result = await apiService.postData(
-        '/puntoRonda',
-        {
-          'coordenadas': {
-            'lat': widget.position.latitude,
-            'lng': widget.position.longitude,
+          '/crearRonda',
+          {
+            'coordenadas': {
+              'lat': widget.position.latitude,
+              'lng': widget.position.longitude,
+            },
+            'observaciones': _observacionesController.text,
+            'estado': _estadoController.text,
+            'direccion': _direccionController.text,
           },
-          'idRonda': _idRondaController.text,
-          'foto': base64Image,
-        },
-        token
-      );
+          "" // add token here
+          );
 
-      if (result['message'] == 'Punto agregado exitosamente') {
+      if (result['message'] == 'Ronda creada exitosamente') {
         Navigator.pop(context, {
-          'idRonda': _idRondaController.text,
+          'observaciones': _observacionesController.text,
+          'estado': _estadoController.text,
+          'direccion': _direccionController.text,
         });
       } else {
-        print('Error al agregar punto a la ronda');  // Replace with your error handling code
+        print(
+            'Error al crear la ronda'); // Replace with your error handling code
       }
     }
   }
 
-  Future<void> _pickImage(ImageSource source) async {
-    final ImagePicker _picker = ImagePicker();
-    final XFile? image = await _picker.pickImage(source: source);
-
-    setState(() {
-      _imageFile = image;
-    });
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller, {bool isObscured = false}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool isObscured = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -134,22 +140,9 @@ class _CrearRondaFormState extends State<CrearRondaForm> {
           key: _formKey,
           child: Column(
             children: <Widget>[
-              _buildTextField('ID de la Ronda', _idRondaController),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                    onPressed: () => _pickImage(ImageSource.camera),
-                    child: Text('Tomar foto'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => _pickImage(ImageSource.gallery),
-                    child: Text('Cargar desde galería'),
-                  ),
-                ],
-              ),
-              if (_imageFile != null)
-                Image.network(_imageFile!.path),
+              _buildTextField('Observaciones', _observacionesController),
+              _buildTextField('Estado', _estadoController),
+              _buildTextField('Dirección', _direccionController),
               Container(
                 width: 250,
                 child: ElevatedButton(
