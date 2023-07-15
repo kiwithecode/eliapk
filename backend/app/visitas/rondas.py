@@ -6,6 +6,7 @@ from app.models.Persona import Persona, PersonaSchema
 from app.models.SAMM_Ronda import SAMM_Ronda, SAMM_RondaSchema
 from app.models.SAMM_Ubicacion import SAMM_Ubicacion, SAMM_UbicacionSchema
 from app.models.SAMM_RondaAsignacion import SAMM_RondaAsignacion, SAMM_RondaAsignacionSchema
+from app.models.SAMM_PropiedadAgente import SAMM_PropiedadAgente, SAMM_PropiedadAgenteSchema
 
 from flask import jsonify, request
 from flask_cors import cross_origin
@@ -61,8 +62,27 @@ def getUrbanizaciones():
     #urbanizaciones are ubicacioes with tipo URBAnizacion
     try:
         urbanizaciones = SAMM_Ubicacion.query.filter_by(Tipo='URBANIZACION').all()
-        ubicacionesSchema = SAMM_UbicacionSchema(many=True)
-        return jsonify(ubicacionesSchema.dump(urbanizaciones)), 200
+        #iterate over urbanizaciones and get the number of personas in each one
+        results = []
+        for urbanizacion in urbanizaciones:
+            cantidad_Agentes =SAMM_PropiedadAgente.query.filter_by(idPropiedad=urbanizacion.Id).count()
+            cantidad_Rondas=SAMM_RondaAsignacion.query.filter_by(IdUbicacion=urbanizacion.Id).count()
+            Supervisor=Persona.query.filter_by(Id=urbanizacion.SupervisorId).first()
+            if(Supervisor is None):
+                Supervisor=Persona()
+                Supervisor.Nombres='Sin Supervisor'
+                Supervisor.Apellidos=''
+            results.append({
+                'id': urbanizacion.Id,
+                'nombre': urbanizacion.Descripcion,
+                'direccion': urbanizacion.Direccion,
+                'coordenadas': urbanizacion.Coordenadas,
+                'supervisor': Supervisor.Nombres + ' ' + Supervisor.Apellidos,
+                'cantidad_propiedades': urbanizacion.Propiedades,
+                'cantidad_Agentes': cantidad_Agentes,
+                'cantidad_Rondas': cantidad_Rondas
+            })
+        return jsonify(results), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500
     
@@ -88,10 +108,45 @@ def addUbicacion():
             Descripcion=data['descripcion'],
             UsuarioModifica=id_usuario_actual,
             Direccion=data['direccion'],
+            Propiedades=data['propiedades'],
+            SupervisorId=data['supervisorId'],	
             Estado='A',
         )
         db.session.add(ubicacion)
         db.session.commit()
+        #add to PropiedadAgente
+        agentesId = data['agentes'] if 'agentes' in data else []
+        for agente in agentesId:
+            propiedadAgente = SAMM_PropiedadAgente(
+                create_time=datetime.now(),
+                update_time=datetime.now(),
+                content='A',
+                idPropiedad=ubicacion.Id,
+                idAgente=agente
+            )
+            db.session.add(propiedadAgente)
+            db.session.commit()
+
+        #puntos de ronda
+        puntos = data['puntos'] if 'puntos' in data else []
+        for punto in puntos:
+            ubicacionPunto = SAMM_Ubicacion(
+                Codigo=data['nombre'],
+                Coordenadas=punto['coordenadas'],
+                Tipo='PUNTO',
+                FechaCrea=datetime.now(),
+                UsuarioCrea=id_usuario_actual,
+                FechaModifica=datetime.now(),
+                Descripcion=data['descripcion'],
+                UsuarioModifica=id_usuario_actual,
+                Direccion=data['direccion'],
+                Propiedades=data['propiedades'],
+                SupervisorId=data['supervisorId'],	
+                Estado='A',
+            )
+            db.session.add(ubicacionPunto)
+            db.session.commit()
+
         return jsonify({'message': 'Ubicacion creada'}), 200
     except Exception as e:
         return jsonify({'message': str(e)}), 500

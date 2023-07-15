@@ -70,7 +70,7 @@ def getVisitas():
 def getPersonasByRol(rol):
     try:
         # make a dict of estado
-        if(rol == 'Guardia'):
+        if(rol == 'Guardia' or rol == 'Agente'):
             estados = {'A': 'En Guardia', 'I': 'Desvinculado', 'D': 'En descanso', 'L': 'Licencia', 'P': 'Día Libre'}
         else:
             estados = {'A': 'Activo', 'I': 'Inactivo'}

@@ -16,6 +16,8 @@ class SAMM_Ubicacion(db.Model):
     UsuarioModifica = db.Column(db.Integer)
     Direccion = db.Column(db.String(100))
     Estado = db.Column(db.String(1))
+    Propiedades=db.Column(db.Integer)
+    SupervisorId=db.Column(db.Integer)
 
 class SAMM_UbicacionSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

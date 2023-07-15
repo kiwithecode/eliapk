@@ -25,7 +25,7 @@ from sqlalchemy import or_
     "cedula": _idController.text,
     "name": _nameController.text,
     "lastName": _lastNameController.text,
-    "plate": _plateController.text
+
 }
 '''
 @bp.route('/registraVisita', methods=['POST'])

@@ -128,8 +128,11 @@ def viewList():
     else:
         return jsonify({"error": "Invalid tipo. Please provide a valid tipo."}), 400
     result = []
+    #order by fecha de visita more recent first
+    bitacoras = sorted(bitacoras, key=lambda x: x.FechaVisita, reverse=True)
     for bitacora in bitacoras:
         persona= Persona.query.filter_by(Id=bitacora.IdVisita).first()
+        
         result.append({
             'id': bitacora.Id,
             'nombre': persona.Nombres,
