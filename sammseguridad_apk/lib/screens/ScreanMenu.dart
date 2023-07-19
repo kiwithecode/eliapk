@@ -3,6 +3,9 @@ import 'package:sammseguridad_apk/widgets/Appbar.dart';
 import 'package:sammseguridad_apk/widgets/Drawer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:sammseguridad_apk/provider/mainprovider.dart';
+import 'package:sammseguridad_apk/services/ApiService.dart';
 
 const kAppBarIconColor = Colors.white;
 const kMainTextStyle = TextStyle(fontSize: 18);
@@ -32,6 +35,31 @@ class _ScreanMenuState extends State<ScreanMenu> {
     super.initState();
     _calendarFormat = CalendarFormat.month;
     _focusedDay = DateTime.now();
+  }
+
+  Future<List<Map<String, dynamic>>> _getVisitsForSelectedDay(
+      DateTime date) async {
+    final mainProvider = Provider.of<MainProvider>(context, listen: false);
+    final apiService = Provider.of<ApiService>(context, listen: false);
+
+    String token = await mainProvider.getPreferencesToken();
+    mainProvider.updateToken(token);
+
+    Map<String, dynamic> requestBody = {
+      'date': DateFormat('yyyy-MM-dd').format(date),
+    };
+
+    List<Map<String, dynamic>> allVisits = (await apiService.postData(
+        '/visitas/viewList', requestBody, token)) as List<Map<String, dynamic>>;
+
+    List<Map<String, dynamic>> visitsForSelectedDay = allVisits.where((visit) {
+      DateTime visitDate = DateTime.parse(visit['hora_ingreso']);
+      return visitDate.year == date.year &&
+          visitDate.month == date.month &&
+          visitDate.day == date.day;
+    }).toList();
+
+    return visitsForSelectedDay;
   }
 
   @override
@@ -105,37 +133,37 @@ class _ScreanMenuState extends State<ScreanMenu> {
         selectedDayPredicate: (day) {
           return isSameDay(_selectedDay, day);
         },
-        onDaySelected: (selectedDay, focusedDay) {
+        onDaySelected: (selectedDay, focusedDay) async {
           if (!isSameDay(_selectedDay, selectedDay)) {
             setState(() {
               _selectedDay = selectedDay;
               _focusedDay = focusedDay;
             });
 
+            // Get visits for selected day
+            List<Map<String, dynamic>> visitsForSelectedDay =
+                await _getVisitsForSelectedDay(selectedDay);
+
             showDialog(
               context: context,
               builder: (context) {
-                String nombres = "Nombres"; // replace with your actual variable
-                String apellidos =
-                    "Apellidos"; // replace with your actual variable
-                String horaIngreso =
-                    "Hora Ingreso"; // replace with your actual variable
-                String tiempo = "Tiempo"; // replace with your actual variable
-                String placa = "Placa"; // replace with your actual variable
-
                 return AlertDialog(
-                  title: Text('Detalles de la Fecha seleccionada'),
+                  title: Text(
+                      'Visitas para ${DateFormat('dd MMMM yyyy', 'es_ES').format(selectedDay)}'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Text(
-                          'Fecha: ${DateFormat('dd MMMM yyyy', 'es_ES').format(selectedDay)}'),
-                      Text('Nombres: $nombres'),
-                      Text('Apellidos: $apellidos'),
-                      Text('Hora de Ingreso: $horaIngreso'),
-                      Text('Tiempo: $tiempo'),
-                      Text('Placa: $placa'),
-                    ],
+                    children: visitsForSelectedDay.map((visit) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Nombres: ${visit['nombre']}'),
+                          Text('Apellidos: ${visit['apellido']}'),
+                          Text('Hora de Ingreso: ${visit['hora_ingreso']}'),
+                          Text('Tiempo: ${visit['duracion']}'),
+                          Text('Placa: ${visit['placa']}'),
+                        ],
+                      );
+                    }).toList(),
                   ),
                   actions: <Widget>[
                     TextButton(
@@ -150,7 +178,7 @@ class _ScreanMenuState extends State<ScreanMenu> {
             );
           }
         },
-         onPageChanged: (focusedDay) {
+        onPageChanged: (focusedDay) {
           _focusedDay = focusedDay;
         },
         calendarStyle: const CalendarStyle(
@@ -164,9 +192,7 @@ class _ScreanMenuState extends State<ScreanMenu> {
           formatButtonVisible: false,
           titleCentered: true,
           headerMargin: EdgeInsets.all(0),
-          titleTextStyle: TextStyle(
-              color: Colors.black,
-              fontSize: 16),
+          titleTextStyle: TextStyle(color: Colors.black, fontSize: 16),
           leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
           rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
         ),
@@ -178,7 +204,7 @@ class _ScreanMenuState extends State<ScreanMenu> {
                 height: 20.0,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.green, // Changed marker color to green
+                  color: Colors.green,
                 ),
               );
             }

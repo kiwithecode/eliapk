@@ -37,15 +37,12 @@ def getRondas():
 @jwt_required()
 def crearRonda():
     user_name = get_jwt_identity()
-    #get user from username
     user = SAMM_Usuario.query.filter_by(Codigo=user_name).first()
-    #get coordenadas from request
     coordenadas = request.form['coordenadas']
     observaciones = request.form['observaciones']
     estado = request.form['estado']
     direccion = request.form['direccion'] if 'direccion' in request.form else None
     try:
-        #create new ronda
         ronda = SAMM_Ronda()
         ronda.Desripcion=observaciones
         ronda.FechaCreacion=datetime.now()
@@ -53,8 +50,6 @@ def crearRonda():
         ronda.UsuCreacion=user.Id
         ronda.UsuModifica=user.Id
         ronda.FechaModifica=datetime.now()
-
-        # find the coordenadas in ubicacion
         ubicacion = SAMM_Ubicacion.query.filter_by(Coordenadas=coordenadas).first()
         if ubicacion is None:
             ubicacion = SAMM_Ubicacion()
@@ -71,7 +66,6 @@ def crearRonda():
         ronda.IdUbicacion=ubicacion.Id
         db.session.add(ronda)
         db.session.commit()
-        #create a punto ronda for the ronda
         puntoRonda = SAMM_PuntoRonda()
         puntoRonda.IdRonda=ronda.Id
         puntoRonda.Orden=1
@@ -81,30 +75,12 @@ def crearRonda():
         puntoRonda.FechaModificacion=datetime.now()
         puntoRonda.UsuCreacion=user.Id
         puntoRonda.UsuModifica=user.Id
-        if 'foto' in request.files:
-            foto=request.files['foto']
-            #check if there is a foto in the request
-            if foto.filename != '':
-                filename=secure_filename(foto.filename)
-                mimetype=foto.mimetype
-                # add new foto to the persona
-                try:
-                    puntoRonda.Foto=foto.read()
-                    puntoRonda.NombreFoto=filename
-                    puntoRonda.Mimetype=mimetype
-                    db.session.commit()
-                except ValidationErr as err:
-                    return jsonify(err.messages), 400
         db.session.add(puntoRonda)
         db.session.commit()
-        #udpate ronda with punto ronda
         ronda.PuntoInicial=puntoRonda.Id
         db.session.add(ronda)
         db.session.commit()
-
         return jsonify({'message': 'Ronda creada exitosamente'}), 200
-
-
     except Exception as e:
         return jsonify({'message': str(e)}), 500
 
@@ -133,9 +109,7 @@ def revisarRonda(id):
 @jwt_required()
 def puntoRonda():
     user_name = get_jwt_identity()
-    #get user from username
     user = SAMM_Usuario.query.filter_by(Codigo=user_name).first()
-    #get coordenadas from request
     coordenadas = request.form['coordenadas']
     idRonda = request.form['idRonda']
     ronda=SAMM_Ronda.query.filter_by(Id=idRonda).first()
@@ -153,20 +127,6 @@ def puntoRonda():
     puntoRonda.FechaModificacion=datetime.now()
     puntoRonda.UsuCreacion=user.Id
     puntoRonda.UsuModifica=user.Id
-    if 'foto' in request.files:
-        foto=request.files['foto']
-        #check if there is a foto in the request
-        if foto.filename != '':
-            filename=secure_filename(foto.filename)
-            mimetype=foto.mimetype
-            # add new foto to the persona
-            try:
-                puntoRonda.Foto=foto.read()
-                puntoRonda.NombreFoto=filename
-                puntoRonda.Mimetype=mimetype
-                db.session.commit()
-            except ValidationErr as err:
-                return jsonify(err.messages), 400
     db.session.add(puntoRonda)
     db.session.commit()
     if(count==9):
@@ -174,6 +134,4 @@ def puntoRonda():
         ronda.PuntoFinal=puntoRonda.Id
         db.session.add(ronda)
         db.session.commit()
-
-
     return jsonify({'message': 'Punto agregado exitosamente'}), 200

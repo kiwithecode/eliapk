@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ApiService {
-  final String _baseUrl = 'http://10.0.2.2:5000'; //ip para emulador
+  final String _baseUrl = 'http://198.38.89.240:8035'; //ip para emulador
   //198.38.89.240:8035
   //ip para tlf http://10.0.2.2:5000
 
@@ -26,7 +26,7 @@ class ApiService {
       log(response.body.toString());
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to load data');
+      throw Exception('Fallo al cargar datos');
     }
   }
 
@@ -43,7 +43,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return response.body;
     } else {
-      throw Exception('Failed to load data');
+      throw Exception('Fallo al cargar datos');
     }
   }
 
@@ -65,7 +65,7 @@ class ApiService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to post data');
+      throw Exception('Fallo al enviar datos');
     }
   }
 
@@ -82,7 +82,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to put data');
+      throw Exception('Fallo al actualizar datos');
     }
   }
 
@@ -97,7 +97,7 @@ class ApiService {
     );
 
     if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete data');
+      throw Exception('Fallo al eliminar datos');
     }
   }
 }
