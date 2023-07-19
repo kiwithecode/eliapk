@@ -1,14 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:sammseguridad_apk/services/ApiService.dart';
 import 'package:sammseguridad_apk/provider/mainprovider.dart';
-import 'package:http/http.dart' as http;
-import 'package:http_parser/http_parser.dart';
 
 const _buttonColor = Color(0xFF0040AE);
 
@@ -23,9 +19,9 @@ class CrearRondaForm extends StatefulWidget {
 
 class _CrearRondaFormState extends State<CrearRondaForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _idRondaController = TextEditingController();
-  final _picker = ImagePicker();
-  File? _imageFile;
+  final TextEditingController _observacionesController =
+      TextEditingController();
+  final TextEditingController _estadoController = TextEditingController();
   String _direccionLabel = "";
 
   @override
@@ -74,45 +70,45 @@ class _CrearRondaFormState extends State<CrearRondaForm> {
         String token = dataToken;
         mainProvider.updateToken(token);
 
-        // Convierte la imagen en un MultipartFile
-        final imageUploadRequest = http.MultipartRequest(
-            'POST', Uri.parse(apiService.getServiceUrl('rondas/puntoRonda')));
+        final Map<String, dynamic> data = {
+          'coordenadas': {
+            'lat': widget.position.latitude,
+            'lng': widget.position.longitude
+          },
+          'observaciones': _observacionesController.text,
+          'estado': _estadoController.text,
+          'direccion': _direccionLabel,
+        };
 
-        // Aquí es donde agregas el token a los encabezados
-        imageUploadRequest.headers.addAll({
-          'Content-Type': 'multipart/form-data',
-          'Authorization': 'Bearer $token',
-        });
+        final response = await apiService.postData('/crearRonda', data, token);
 
-        if (_imageFile != null) {
-          final file = await http.MultipartFile.fromPath(
-            'picture',
-            _imageFile!.path,
-            contentType: MediaType('image', 'jpeg'),
-          );
-          imageUploadRequest.files.add(file);
-        }
+        if (response['message'] == 'Ronda creada exitosamente') {
+          final rondaId = response[
+              'idRonda']; // Asegurate de que el backend retorne el id de la ronda
 
-        imageUploadRequest.fields['coordenadas'] = jsonEncode({
-          'lat': widget.position.latitude,
-          'lng': widget.position.longitude,
-        });
+          // Crear el punto de la ronda
+          final puntoData = {
+            'coordenadas': {
+              'lat': widget.position.latitude,
+              'lng': widget.position.longitude
+            },
+            'idRonda': rondaId
+          };
 
-        imageUploadRequest.fields['idRonda'] = _idRondaController.text;
+          final puntoResponse =
+              await apiService.postData('/puntoRonda', puntoData, token);
 
-        final streamedResponse = await imageUploadRequest.send();
-        final response = await http.Response.fromStream(streamedResponse);
-
-        if (response.statusCode == 200) {
-          Navigator.pop(context, {
-            'idRonda': _idRondaController.text,
-          });
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Punto agregado exitosamente'),
-            backgroundColor: Colors.green,
-          ));
+          if (puntoResponse['message'] == 'Punto agregado exitosamente') {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Ronda creada exitosamente'),
+              backgroundColor: Colors.green,
+            ));
+          } else {
+            throw Exception("Error al agregar el punto");
+          }
         } else {
-          throw Exception("Error al agregar el punto");
+          throw Exception("Error al crear la ronda");
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -121,44 +117,6 @@ class _CrearRondaFormState extends State<CrearRondaForm> {
         ));
       }
     }
-  }
-
-  Future<void> _setImage(ImageSource source) async {
-    try {
-      final pickedFile = await _picker.pickImage(source: source);
-
-      if (pickedFile == null) {
-        throw Exception('No se seleccionó ninguna imagen.');
-      }
-
-      setState(() {
-        _imageFile = File(pickedFile.path);
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('$e'),
-        backgroundColor: Colors.red,
-      ));
-    }
-  }
-
-  ElevatedButton _buildElevatedButton(
-      {required VoidCallback onPressed,
-      required String label,
-      required Icon icon}) {
-    return ElevatedButton.icon(
-      onPressed: onPressed,
-      icon: icon,
-      label: Text(label),
-      style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-        backgroundColor: _buttonColor,
-        shape: RoundedRectangleBorder(
-          side: BorderSide(color: _buttonColor, width: 2),
-          borderRadius: BorderRadius.circular(0.0),
-        ),
-      ),
-    );
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
@@ -209,7 +167,8 @@ class _CrearRondaFormState extends State<CrearRondaForm> {
           key: _formKey,
           child: ListView(
             children: <Widget>[
-              _buildTextField('ID Ronda', _idRondaController),
+              _buildTextField('Observaciones', _observacionesController),
+              _buildTextField('Estado', _estadoController),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 10),
                 child: Text(
@@ -219,39 +178,6 @@ class _CrearRondaFormState extends State<CrearRondaForm> {
               ),
               Text(_direccionLabel),
               const SizedBox(height: 20.0),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 5,
-                    child: _buildElevatedButton(
-                      onPressed: () => _setImage(ImageSource.camera),
-                      icon: Icon(Icons.camera_alt),
-                      label: 'Tomar Foto',
-                    ),
-                  ),
-                  const SizedBox(width: 10.0),
-                  Expanded(
-                    flex: 5,
-                    child: _buildElevatedButton(
-                      onPressed: () => _setImage(ImageSource.gallery),
-                      icon: Icon(Icons.photo_library_outlined),
-                      label: 'Galeria',
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 10.0),
-              if (_imageFile != null)
-                Padding(
-                  padding: const EdgeInsets.all(0.0),
-                  child: Image.file(
-                    _imageFile!,
-                    height: 200, // Set as needed
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              SizedBox(height: 10.0),
               ElevatedButton(
                 onPressed: _saveForm,
                 child: Text(
